@@ -70,6 +70,11 @@ public class HeaderScrollView extends LinearLayout{
         }
     }
 
+    private boolean isFirstListItemTotallySeen(){
+        View view = mListView.getChildAt(0);
+        return view.getTop() >= 0;
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
@@ -80,21 +85,24 @@ public class HeaderScrollView extends LinearLayout{
             mLastInterceptX = (int) ev.getX();
             mLastInterceptY = (int) ev.getY();
             mDownHeaderHeight = mHeaderView.getMeasuredHeight();
-            Log.d(TAG, "ACTION_DOWN mDownHeaderHeight:" + mDownHeaderHeight);
         }
         else if(ev.getAction() == MotionEvent.ACTION_MOVE){
             int deltaX = x - mLastInterceptX;
             int deltaY = y - mLastInterceptY;
-            if(Math.abs(deltaX) < Math.abs(deltaY)
-                    && getHeaderHeight() >= 0){
-                intercept = true;
+            if(Math.abs(deltaX) < Math.abs(deltaY)){
+                if(getHeaderHeight() > 0){
+                    intercept = true;
+                }
+                else if(getHeaderHeight() == 0 && deltaY >=0 && isFirstListItemTotallySeen()){
+                    intercept = true;
+                }
             }
         }
         return intercept;
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev){
+    public boolean onTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
