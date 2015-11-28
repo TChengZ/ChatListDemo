@@ -78,6 +78,10 @@ public class HeaderScrollView extends LinearLayout{
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
+        //ListView有Item被滑动到最左边，需要滑动回正常位置
+        if(mListView.getNeedScrollToNormal(ev)){
+            return true;
+        }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         boolean intercept = false;
@@ -106,6 +110,10 @@ public class HeaderScrollView extends LinearLayout{
 //        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
+        if(mListView.getNeedScrollToNormal(ev)){
+            mListView.scrollToNormal(ev);
+            return true;
+        }
        if(ev.getAction() == MotionEvent.ACTION_MOVE) {
             int deltaX = x - mLastInterceptX;
             int deltaY = y - mLastInterceptY;

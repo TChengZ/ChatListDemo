@@ -6,7 +6,6 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.ListView;
 
 /**
@@ -27,6 +26,10 @@ public class ScrollItemListView extends ListView{
     //Down点击时左边View的marginLeft值
     private int mDownLeftMargin = 0;
 
+    private int mHasScrollItemPos = -1;
+
+    private boolean mNeedScrollToNormal = false;
+
     public ScrollItemListView(Context context) {
         super(context);
     }
@@ -41,7 +44,7 @@ public class ScrollItemListView extends ListView{
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-//        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+    //    Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = pointToPosition(x, y);
@@ -54,19 +57,49 @@ public class ScrollItemListView extends ListView{
             }
         }
         else if(ev.getAction() == MotionEvent.ACTION_UP){
-            scrollToEnd(x);
-            mScrollView = null;
+            int nowLeftMargin = mDownLeftMargin + x - mLastInterceptX;
+            scrollToEnd(nowLeftMargin);
+            if(nowLeftMargin < mMaxLeftMargin*0.5){
+                setNeedScrollToNormal(true, pos);
+            }
         }
         return super.onTouchEvent(ev);
     }
 
-    private void scrollToEnd(int nowX){
-        int nowLeftMargin = mDownLeftMargin + nowX - mLastInterceptX;
+    private void scrollToEnd(int nowLeftMargin){
         boolean flag = (Math.abs(nowLeftMargin)  < Math.abs(mMaxLeftMargin) * 0.5);
         new ScrollToEndTask(mScrollView,
                 flag? ScrollToEndTask.SCROLL_RIGHT: ScrollToEndTask.SCROLL_LEFT).execute();
     }
 
+    private void setNeedScrollToNormal(boolean flag, int pos){
+        mNeedScrollToNormal = flag;
+        mHasScrollItemPos = pos;
+    }
+    public boolean getNeedScrollToNormal(MotionEvent ev){
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
+        int pos = pointToPosition(x, y);
+        Log.d(TAG, "ev:" + ev.getAction() + " pos:" + pos + " mHasScrollItemPos:" + mHasScrollItemPos);
+        if(ev.getAction() == MotionEvent.ACTION_DOWN  && pos == mHasScrollItemPos){
+            setNeedScrollToNormal(false, -1);
+            return false;
+        }
+        else if(!n)
+        return mNeedScrollToNormal;
+    }
+
+    public void scrollToNormal(MotionEvent ev){
+        if(ev.getAction() == MotionEvent.ACTION_DOWN){
+            new ScrollToEndTask(mScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+        }
+        else if(ev.getAction() == MotionEvent.ACTION_UP){
+            if(mNeedScrollToNormal) {
+                mNeedScrollToNormal = false;
+                mHasScrollItemPos = -1;
+            }
+        }
+    }
 
     /**
      * 获取滑动所需的数据
@@ -144,7 +177,7 @@ public class ScrollItemListView extends ListView{
         protected Void doInBackground(Void... voids) {
             int margin = marginLayoutParams.leftMargin;
             try {
-                while (margin < 0 && margin > mMaxLeftMargin){
+                while (margin < 0 && margin >= mMaxLeftMargin){
                     if(direction == SCROLL_LEFT){
                         margin-=10;
                     }
