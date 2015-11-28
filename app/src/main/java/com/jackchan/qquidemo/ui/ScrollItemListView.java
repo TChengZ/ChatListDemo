@@ -85,7 +85,6 @@ public class ScrollItemListView extends ListView{
             setNeedScrollToNormal(false, -1);
             return false;
         }
-        else if(!n)
         return mNeedScrollToNormal;
     }
 
