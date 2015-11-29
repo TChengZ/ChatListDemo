@@ -93,6 +93,9 @@ public class ScrollItemListView extends ListView{
         if(ev.getAction() == MotionEvent.ACTION_DOWN){
             mLastInterceptX = x;
             mLastInterceptY = y - this.getTop();
+            if(mScrollView != null && mLastInterceptX > mScrollView.getRight() && pos == mHasScrollItemPos){
+                setNeedScrollToNormal(false, -1);
+            }
         }
         else if(ev.getAction() == MotionEvent.ACTION_MOVE &&
                 mNeedScrollToNormal && !mIsScrollingToNormal
