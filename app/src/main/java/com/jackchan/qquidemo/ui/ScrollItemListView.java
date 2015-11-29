@@ -30,6 +30,10 @@ public class ScrollItemListView extends ListView{
 
     private boolean mNeedScrollToNormal = false;
 
+    private boolean mIsScrollingToNormal = false;
+
+    private int mDownPos = -1;
+
     public ScrollItemListView(Context context) {
         super(context);
     }
@@ -44,11 +48,15 @@ public class ScrollItemListView extends ListView{
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-    //    Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = pointToPosition(x, y);
-        if(ev.getAction() == MotionEvent.ACTION_MOVE) {
+        if(ev.getAction() == MotionEvent.ACTION_DOWN){
+            Log.d(TAG, "mDownPos = " + pos);
+            mDownPos = pos;
+        }
+        else if(ev.getAction() == MotionEvent.ACTION_MOVE) {
             int deltaX = x - mLastInterceptX;
             int deltaY = y - mLastInterceptY;
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
@@ -60,7 +68,8 @@ public class ScrollItemListView extends ListView{
             int nowLeftMargin = mDownLeftMargin + x - mLastInterceptX;
             scrollToEnd(nowLeftMargin);
             if(nowLeftMargin < mMaxLeftMargin*0.5){
-                setNeedScrollToNormal(true, pos);
+                Log.d(TAG, "set down pos:" + mDownPos);
+                setNeedScrollToNormal(true, mDownPos);
             }
         }
         return super.onTouchEvent(ev);
@@ -79,23 +88,34 @@ public class ScrollItemListView extends ListView{
     public boolean getNeedScrollToNormal(MotionEvent ev){
         int x = (int) ev.getX();
         int y = (int) ev.getY();
-        int pos = pointToPosition(x, y);
-        Log.d(TAG, "ev:" + ev.getAction() + " pos:" + pos + " mHasScrollItemPos:" + mHasScrollItemPos);
-        if(ev.getAction() == MotionEvent.ACTION_DOWN  && pos == mHasScrollItemPos){
-            setNeedScrollToNormal(false, -1);
-            return false;
+        int pos = this.pointToPosition(x, y - this.getTop());
+//        Log.d(TAG, "ev:" + ev.getAction() + " pos:" + pos + " mHasScrollItemPos:" + mHasScrollItemPos);
+        if(ev.getAction() == MotionEvent.ACTION_DOWN){
+            mLastInterceptX = x;
+            mLastInterceptY = y - this.getTop();
+        }
+        else if(ev.getAction() == MotionEvent.ACTION_MOVE &&
+                mNeedScrollToNormal && !mIsScrollingToNormal
+                && pos == mHasScrollItemPos){
+            int delaX = x - mLastInterceptX;
+            int delaY = y - mLastInterceptY;
+            if(Math.abs(delaY) < Math.abs(delaX)) {
+                setNeedScrollToNormal(false, -1);
+            }
         }
         return mNeedScrollToNormal;
     }
 
     public void scrollToNormal(MotionEvent ev){
-        if(ev.getAction() == MotionEvent.ACTION_DOWN){
-            new ScrollToEndTask(mScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+        if(ev.getAction() == MotionEvent.ACTION_MOVE){
+            if(!mIsScrollingToNormal){
+                new ScrollToEndTask(mScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+                mIsScrollingToNormal = true;
+            }
         }
         else if(ev.getAction() == MotionEvent.ACTION_UP){
             if(mNeedScrollToNormal) {
-                mNeedScrollToNormal = false;
-                mHasScrollItemPos = -1;
+                setNeedScrollToNormal(false, -1);
             }
         }
     }
@@ -205,6 +225,14 @@ public class ScrollItemListView extends ListView{
             }
             marginLayoutParams.leftMargin = margin;
             view.setLayoutParams(marginLayoutParams);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if(mIsScrollingToNormal){
+                mIsScrollingToNormal = false;
+            }
         }
     }
 }
