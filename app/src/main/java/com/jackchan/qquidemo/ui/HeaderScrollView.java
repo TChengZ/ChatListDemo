@@ -27,6 +27,8 @@ public class HeaderScrollView extends LinearLayout{
 
     private int mDownHeaderHeight = 0;
 
+    private boolean mNeedScrollToNormal = false;
+
     public HeaderScrollView(Context context) {
         super(context);
         mContext = context;
@@ -79,7 +81,8 @@ public class HeaderScrollView extends LinearLayout{
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
         //ListView有Item被滑动到最左边，需要滑动回正常位置
-        if(mListView.getNeedScrollToNormal(ev)){
+        mNeedScrollToNormal = mListView.getNeedScrollToNormal(ev);
+        if(mNeedScrollToNormal){
             return true;
         }
         int x = (int) ev.getX();
@@ -110,7 +113,7 @@ public class HeaderScrollView extends LinearLayout{
 //        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
-        if(mListView.getNeedScrollToNormal(ev)){
+        if(mNeedScrollToNormal){
             mListView.scrollToNormal(ev);
             return true;
         }

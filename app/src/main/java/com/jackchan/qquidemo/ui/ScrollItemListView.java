@@ -1,6 +1,7 @@
 package com.jackchan.qquidemo.ui;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -23,6 +24,7 @@ public class ScrollItemListView extends ListView{
     private int mMaxLeftMargin = 0;
     //左移View
     private View mScrollView = null;
+    private View mLastScrollView = null;
     //Down点击时左边View的marginLeft值
     private int mDownLeftMargin = 0;
 
@@ -47,8 +49,30 @@ public class ScrollItemListView extends ListView{
     }
 
     @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+//        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
+        int x = (int) ev.getX();
+        int y = (int) ev.getY();
+        int pos = pointToPosition(x, y);
+        boolean intercept = false;
+        if(ev.getAction() == MotionEvent.ACTION_DOWN){
+            mLastInterceptX = (int) ev.getX();
+            mLastInterceptY = (int) ev.getY();
+            getScrollData(pos);
+        }
+        else if(ev.getAction() == MotionEvent.ACTION_MOVE){
+            int deltaX = x - mLastInterceptX;
+            int deltaY = y - mLastInterceptY;
+            if(Math.abs(deltaX) > Math.abs(deltaY)){
+                intercept = true;
+            }
+        }
+        return intercept;
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+//        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = pointToPosition(x, y);
@@ -79,6 +103,7 @@ public class ScrollItemListView extends ListView{
         boolean flag = (Math.abs(nowLeftMargin)  < Math.abs(mMaxLeftMargin) * 0.5);
         new ScrollToEndTask(mScrollView,
                 flag? ScrollToEndTask.SCROLL_RIGHT: ScrollToEndTask.SCROLL_LEFT).execute();
+        mLastScrollView = mScrollView;
     }
 
     private void setNeedScrollToNormal(boolean flag, int pos){
@@ -93,9 +118,11 @@ public class ScrollItemListView extends ListView{
         if(ev.getAction() == MotionEvent.ACTION_DOWN){
             mLastInterceptX = x;
             mLastInterceptY = y - this.getTop();
-            if(mScrollView != null && mLastInterceptX > mScrollView.getRight() && pos == mHasScrollItemPos){
+            //点击在删除按钮的部分不需要拦截
+            if(mLastScrollView != null && mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos){
                 setNeedScrollToNormal(false, -1);
             }
+            return false;
         }
         else if(ev.getAction() == MotionEvent.ACTION_MOVE &&
                 mNeedScrollToNormal && !mIsScrollingToNormal
@@ -112,7 +139,7 @@ public class ScrollItemListView extends ListView{
     public void scrollToNormal(MotionEvent ev){
         if(ev.getAction() == MotionEvent.ACTION_MOVE){
             if(!mIsScrollingToNormal){
-                new ScrollToEndTask(mScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+                new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
                 mIsScrollingToNormal = true;
             }
         }
@@ -157,28 +184,6 @@ public class ScrollItemListView extends ListView{
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
         super.requestDisallowInterceptTouchEvent(disallowIntercept);
-    }
-
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-//        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
-        int x = (int) ev.getX();
-        int y = (int) ev.getY();
-        int pos = pointToPosition(x, y);
-        boolean intercept = false;
-        if(ev.getAction() == MotionEvent.ACTION_DOWN){
-            mLastInterceptX = (int) ev.getX();
-            mLastInterceptY = (int) ev.getY();
-            getScrollData(pos);
-        }
-        else if(ev.getAction() == MotionEvent.ACTION_MOVE){
-            int deltaX = x - mLastInterceptX;
-            int deltaY = y - mLastInterceptY;
-            if(Math.abs(deltaX) > Math.abs(deltaY)){
-                intercept = true;
-            }
-        }
-        return intercept;
     }
 
     private class ScrollToEndTask extends AsyncTask<Void, Integer, Void>{
