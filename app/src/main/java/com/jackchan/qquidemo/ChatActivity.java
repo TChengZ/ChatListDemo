@@ -8,9 +8,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.jackchan.qquidemo.ui.CircleNotifyView;
 import com.jackchan.qquidemo.ui.HeaderScrollView;
 import com.jackchan.qquidemo.ui.ScrollItemListView;
 
@@ -49,8 +51,10 @@ public class ChatActivity extends ActionBarActivity {
     }
 
     private class ViewHolder{
+        RelativeLayout rlName;
         TextView tvName;
         Button btnDelete;
+        CircleNotifyView viewNotify;
     }
 
     private class MyAdapter extends BaseAdapter{
@@ -76,9 +80,11 @@ public class ChatActivity extends ActionBarActivity {
             if(null == convertView){
                 convertView = LayoutInflater.from(ChatActivity.this).inflate(R.layout.list_item, null);
                 viewHolder = new ViewHolder();
+                viewHolder.rlName = (RelativeLayout) convertView.findViewById(R.id.rl_name);
                 viewHolder.tvName = (TextView) convertView.findViewById(R.id.tvName);
                 viewHolder.btnDelete = (Button) convertView.findViewById(R.id.btnDelete);
-                viewHolder.tvName.setTag(ScrollItemListView.NOR_DELETE_TAG);
+                viewHolder.viewNotify = (CircleNotifyView) convertView.findViewById(R.id.notify_view);
+                viewHolder.rlName.setTag(ScrollItemListView.NOR_DELETE_TAG);
                 viewHolder.btnDelete.setTag(ScrollItemListView.DELETE_TAG);
                 convertView.setTag(viewHolder);
             }
@@ -86,6 +92,7 @@ public class ChatActivity extends ActionBarActivity {
                 viewHolder = (ViewHolder)convertView.getTag();
             }
             viewHolder.tvName.setText(mList.get(i).name);
+            viewHolder.viewNotify.setNumber(i);
             final View itemView = convertView;
             viewHolder.btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
