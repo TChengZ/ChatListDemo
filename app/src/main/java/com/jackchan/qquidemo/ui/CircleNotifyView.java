@@ -1,19 +1,25 @@
 package com.jackchan.qquidemo.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.RelativeLayout;
 
 /**
  * Created by ChenZuJie on 2015/11/28.
  *
  */
-public class CircleNotifyView extends View {
+public class CircleNotifyView extends RelativeLayout {
     private static final String TAG = "CircleNotifyView";
 
     private Context mContext = null;
@@ -35,11 +41,15 @@ public class CircleNotifyView extends View {
         super(context, attrs, defStyleAttr);
         init(context);
     }
-
+    WindowManager wmManager=null;
+    private ViewGroup mDectorView = null;
     private void init(Context context){
+        setWillNotDraw(false);
         mContext = context;
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, mContext.getResources().getDisplayMetrics()));
+        wmManager=(WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        mDectorView = (ViewGroup)((Activity)mContext).getWindow().getDecorView().findViewById(android.R.id.content);
     }
 
     @Override
@@ -95,7 +105,27 @@ public class CircleNotifyView extends View {
         String content = Integer.toString(mNumber);
         float x = (width - mPaint.measureText(content)) / 2;
         float y = (height + mPaint.measureText(content, 0, 1))/ 2;
-        Log.d(TAG , "x , y:" + x + ", " + y);
         canvas.drawText(content, x, y, mPaint);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "x:" + event.getX() + " y:" + event.getY());
+        Log.d(TAG, "rawx:" + event.getRawX() + " rawy:" + event.getRawY());
+        if(mDectorView.getChildCount() == 1){
+            CircleNotifyView view = new CircleNotifyView(mContext);
+            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(this.getWidth(), this.getHeight());
+            view.setLayoutParams(params);
+            view.setX(event.getRawX() - 10);
+            view.setX(event.getRawY() - 10);
+            view.setNumber(this.mNumber);
+            mDectorView.addView(view,1);
+        }
+        else{
+            CircleNotifyView view = (CircleNotifyView)mDectorView.getChildAt(1);
+            view.setX(event.getRawX());
+            view.setY(event.getRawY());
+        }
+        return true;
     }
 }
