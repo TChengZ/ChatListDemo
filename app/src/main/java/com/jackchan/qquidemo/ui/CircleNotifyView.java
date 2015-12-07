@@ -27,8 +27,10 @@ public class CircleNotifyView extends View {
     private int mNumber = 0;
 
     private ViewGroup mDecorView = null;
-
-    private int mStatusHeight = 0;
+    /**
+     * 状态栏和标题栏高度和
+     */
+    private int mExtraHeight = 0;
 
     public CircleNotifyView(Context context) {
         super(context);
@@ -50,19 +52,15 @@ public class CircleNotifyView extends View {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, mContext.getResources().getDisplayMetrics()));
         mDecorView = (ViewGroup)((Activity)mContext).getWindow().getDecorView().findViewById(android.R.id.content);
-        mStatusHeight = getStatusBarHeight();
     }
 
-    private int getStatusBarHeight() {
+    private int getExtraHeight() {
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
             result = getResources().getDimensionPixelSize(resourceId);
-            Log.d(TAG, "status_bar_height:" + result);
         }
         result += mDecorView.getTop();
-        Log.d(TAG, "getTop:" + mDecorView.getTop());
-        Log.d(TAG, "result height:" + result);
         return result;
     }
 
@@ -124,16 +122,17 @@ public class CircleNotifyView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "rawX:" + event.getRawX() + " rawY:" + event.getRawY());
-        Log.d(TAG, "mStatusHeight:" + mStatusHeight);
+//        Log.d(TAG, "rawX:" + event.getRawX() + " rawY:" + event.getRawY());
+//        Log.d(TAG, "mExtraHeight:" + mExtraHeight);
         if(event.getAction() == MotionEvent.ACTION_DOWN){
+            mExtraHeight = getExtraHeight();
             if(mDecorView.getChildCount() == 1){
                 setScrollParentDisallowIntercept(true);
-                addNotify(event.getRawX(), event.getRawY() - mStatusHeight);
+                addNotify();
             }
         }
         else if(event.getAction() == MotionEvent.ACTION_MOVE){
-            updateNotify(event.getRawX(), event.getRawY() - mStatusHeight);
+            updateNotify(event.getRawX(), event.getRawY() - mExtraHeight);
         }
         else if(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL){
             setScrollParentDisallowIntercept(false);
@@ -163,22 +162,25 @@ public class CircleNotifyView extends View {
         }
     }
 
-    private void addNotify(float x, float y){
-        Log.d(TAG, "x:" + x + " y:" + y);
-        CircleNotifyView view = new CircleNotifyView(mContext);
-        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(this.getWidth(), this.getHeight());
+    private void addNotify(){
+        DragCircleNotifyView view = new DragCircleNotifyView(mContext);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         view.setLayoutParams(params);
-        view.setX(x);
-        view.setY(y);
+        final int[] location = new int[2];
+        this.getLocationOnScreen(location);
+        Log.d(TAG, "location:" + location[0] + " " + location[1]);
+        Log.d(TAG, location[0] + getWidth()/2 + " " + (location[1] + getHeight()/2 - mExtraHeight));
+        view.setStartPoint(location[0] + getWidth()/2, location[1] + getHeight()/2 - mExtraHeight);
         view.setNumber(this.mNumber);
+        view.setRadius(getWidth()/2);
         mDecorView.addView(view,1);
     }
 
     private void updateNotify(float x, float y){
         Log.d(TAG, "x:" + x + " y:" + y);
-        CircleNotifyView view = (CircleNotifyView) mDecorView.getChildAt(1);
-        view.setX(x);
-        view.setY(y);
+        DragCircleNotifyView view = (DragCircleNotifyView) mDecorView.getChildAt(1);
+        view.setCurrentPoint(x, y);
+        view.refresh();
     }
 
     private void removeNotify(){
