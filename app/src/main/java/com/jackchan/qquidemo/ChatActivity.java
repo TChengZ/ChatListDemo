@@ -23,7 +23,6 @@ import java.util.List;
 public class ChatActivity extends ActionBarActivity {
     private final static String TAG = "ChatActivity";
     private List<Item> mList = null;
-    private ScrollItemListView mListView = null;
     private MyAdapter mMyAdapter = null;
     private HeaderScrollView mHeaderScrollView = null;
 

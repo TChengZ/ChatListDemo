@@ -5,27 +5,30 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.RelativeLayout;
+import android.widget.ListView;
+import android.widget.ScrollView;
 
 /**
  * Created by ChenZuJie on 2015/11/28.
  *
  */
-public class CircleNotifyView extends RelativeLayout {
+public class CircleNotifyView extends View {
     private static final String TAG = "CircleNotifyView";
 
     private Context mContext = null;
     private Paint mPaint = null;
 
     private int mNumber = 0;
+
+    private ViewGroup mDecorView = null;
+
+    private int mStatusHeight = 0;
 
     public CircleNotifyView(Context context) {
         super(context);
@@ -41,15 +44,26 @@ public class CircleNotifyView extends RelativeLayout {
         super(context, attrs, defStyleAttr);
         init(context);
     }
-    WindowManager wmManager=null;
-    private ViewGroup mDectorView = null;
+
     private void init(Context context){
-        setWillNotDraw(false);
         mContext = context;
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, mContext.getResources().getDisplayMetrics()));
-        wmManager=(WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-        mDectorView = (ViewGroup)((Activity)mContext).getWindow().getDecorView().findViewById(android.R.id.content);
+        mDecorView = (ViewGroup)((Activity)mContext).getWindow().getDecorView().findViewById(android.R.id.content);
+        mStatusHeight = getStatusBarHeight();
+    }
+
+    private int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+            Log.d(TAG, "status_bar_height:" + result);
+        }
+        result += mDecorView.getTop();
+        Log.d(TAG, "getTop:" + mDecorView.getTop());
+        Log.d(TAG, "result height:" + result);
+        return result;
     }
 
     @Override
@@ -110,22 +124,65 @@ public class CircleNotifyView extends RelativeLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        Log.d(TAG, "x:" + event.getX() + " y:" + event.getY());
-        Log.d(TAG, "rawx:" + event.getRawX() + " rawy:" + event.getRawY());
-        if(mDectorView.getChildCount() == 1){
-            CircleNotifyView view = new CircleNotifyView(mContext);
-            ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(this.getWidth(), this.getHeight());
-            view.setLayoutParams(params);
-            view.setX(event.getRawX() - 10);
-            view.setX(event.getRawY() - 10);
-            view.setNumber(this.mNumber);
-            mDectorView.addView(view,1);
+        Log.d(TAG, "rawX:" + event.getRawX() + " rawY:" + event.getRawY());
+        Log.d(TAG, "mStatusHeight:" + mStatusHeight);
+        if(event.getAction() == MotionEvent.ACTION_DOWN){
+            if(mDecorView.getChildCount() == 1){
+                setScrollParentDisallowIntercept(true);
+                addNotify(event.getRawX(), event.getRawY() - mStatusHeight);
+            }
         }
-        else{
-            CircleNotifyView view = (CircleNotifyView)mDectorView.getChildAt(1);
-            view.setX(event.getRawX());
-            view.setY(event.getRawY());
+        else if(event.getAction() == MotionEvent.ACTION_MOVE){
+            updateNotify(event.getRawX(), event.getRawY() - mStatusHeight);
+        }
+        else if(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL){
+            setScrollParentDisallowIntercept(false);
+            removeNotify();
         }
         return true;
     }
+
+    private void setScrollParentDisallowIntercept(boolean disallowIntercept){
+        View target = this;
+        while (true) {
+            View parent;
+            try {
+                parent = (View) target.getParent();
+            } catch (Exception e) {
+                return;
+            }
+            if (parent == null)
+                return;
+            if (parent instanceof ListView || parent instanceof ScrollView) {
+                ((ViewGroup)parent).requestDisallowInterceptTouchEvent(disallowIntercept);
+            }
+            else if(parent instanceof IPersonalScrollView){
+                ((IPersonalScrollView)parent).disallowedIntercept(disallowIntercept);
+            }
+            target = parent;
+        }
+    }
+
+    private void addNotify(float x, float y){
+        Log.d(TAG, "x:" + x + " y:" + y);
+        CircleNotifyView view = new CircleNotifyView(mContext);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(this.getWidth(), this.getHeight());
+        view.setLayoutParams(params);
+        view.setX(x);
+        view.setY(y);
+        view.setNumber(this.mNumber);
+        mDecorView.addView(view,1);
+    }
+
+    private void updateNotify(float x, float y){
+        Log.d(TAG, "x:" + x + " y:" + y);
+        CircleNotifyView view = (CircleNotifyView) mDecorView.getChildAt(1);
+        view.setX(x);
+        view.setY(y);
+    }
+
+    private void removeNotify(){
+        mDecorView.removeViewAt(1);
+    }
+
 }

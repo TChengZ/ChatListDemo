@@ -13,7 +13,7 @@ import android.widget.ListView;
  * Created by ChenZuJie on 2015/11/22.
  * A ListView which its item can be scroll horizontal
  */
-public class ScrollItemListView extends ListView{
+public class ScrollItemListView extends ListView implements IPersonalScrollView{
 
     private static final String TAG = "ScrollItemListView";
     public static final String DELETE_TAG = "delete";
@@ -36,6 +36,8 @@ public class ScrollItemListView extends ListView{
 
     private int mDownPos = -1;
 
+    private boolean mDisallowedIntercept = false;
+
     public ScrollItemListView(Context context) {
         super(context);
     }
@@ -51,6 +53,9 @@ public class ScrollItemListView extends ListView{
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
+        if(mDisallowedIntercept){
+            return false;
+        }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = pointToPosition(x, y);
@@ -73,6 +78,9 @@ public class ScrollItemListView extends ListView{
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+        if(mDisallowedIntercept){
+            return false;
+        }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = pointToPosition(x, y);
@@ -184,6 +192,11 @@ public class ScrollItemListView extends ListView{
     @Override
     public void requestDisallowInterceptTouchEvent(boolean disallowIntercept) {
         super.requestDisallowInterceptTouchEvent(disallowIntercept);
+    }
+
+    @Override
+    public void disallowedIntercept(boolean disallowed) {
+        mDisallowedIntercept = disallowed;
     }
 
     private class ScrollToEndTask extends AsyncTask<Void, Integer, Void>{

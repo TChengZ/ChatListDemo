@@ -14,7 +14,7 @@ import android.widget.TextView;
 /**
  * Created by ChenZuJie on 2015/11/24.
  */
-public class HeaderScrollView extends LinearLayout{
+public class HeaderScrollView extends LinearLayout implements IPersonalScrollView{
     private static final String TAG = "HeaderScrollView";
     private View mHeaderView = null;
     private Context mContext = null;
@@ -28,6 +28,8 @@ public class HeaderScrollView extends LinearLayout{
     private int mDownHeaderHeight = 0;
 
     private boolean mNeedScrollToNormal = false;
+
+    private boolean mDisallowedIntercept = false;
 
     public HeaderScrollView(Context context) {
         super(context);
@@ -81,6 +83,9 @@ public class HeaderScrollView extends LinearLayout{
     public boolean onInterceptTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
         //ListView有Item被滑动到最左边，需要滑动回正常位置
+        if(mDisallowedIntercept){
+            return false;
+        }
         mNeedScrollToNormal = mListView.getNeedScrollToNormal(ev);
         if(mNeedScrollToNormal){
             return true;
@@ -111,6 +116,9 @@ public class HeaderScrollView extends LinearLayout{
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 //        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+        if(mDisallowedIntercept){
+            return false;
+        }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         if(mNeedScrollToNormal){
@@ -130,6 +138,11 @@ public class HeaderScrollView extends LinearLayout{
                    new ScrollToEndTask(up?ScrollToEndTask.SCROLL_UP:ScrollToEndTask.SCROLL_DOWN).execute();
        }
         return super.onTouchEvent(ev);
+    }
+
+    @Override
+    public void disallowedIntercept(boolean disallowed) {
+        mDisallowedIntercept = disallowed;
     }
 
     private class ScrollToEndTask extends AsyncTask<Void, Integer, Void> {
