@@ -32,6 +32,10 @@ public class CircleNotifyView extends View {
      */
     private int mExtraHeight = 0;
 
+    private DragCircleNotifyView mDragView = null;
+
+    private ICircleNotifyCallback iCircleNotifyCallback = null;
+
     public CircleNotifyView(Context context) {
         super(context);
         init(context);
@@ -128,7 +132,11 @@ public class CircleNotifyView extends View {
             mExtraHeight = getExtraHeight();
             if(mDecorView.getChildCount() == 1){
                 setScrollParentDisallowIntercept(true);
-                addNotify();
+                final int[] location = new int[2];
+                this.getLocationOnScreen(location);
+                float x = location[0] + getWidth() / 2;
+                float y =location[1] + getHeight() / 2 - mExtraHeight;
+                addNotify(x, y);
             }
         }
         else if(event.getAction() == MotionEvent.ACTION_MOVE){
@@ -137,6 +145,10 @@ public class CircleNotifyView extends View {
         else if(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL){
             setScrollParentDisallowIntercept(false);
             removeNotify();
+            Log.d(TAG, "getRatio:" + mDragView.getRatio());
+            if(null != mDragView && mDragView.getRatio() <= 0){
+                iCircleNotifyCallback.onDismissByTag((int)this.getTag());
+            }
         }
         return true;
     }
@@ -162,29 +174,35 @@ public class CircleNotifyView extends View {
         }
     }
 
-    private void addNotify(){
-        DragCircleNotifyView view = new DragCircleNotifyView(mContext);
+    private void addNotify(float x, float y){
+        if(null == mDragView) {
+            mDragView = new DragCircleNotifyView(mContext);
+        }
         ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        view.setLayoutParams(params);
-        final int[] location = new int[2];
-        this.getLocationOnScreen(location);
-        Log.d(TAG, "location:" + location[0] + " " + location[1]);
-        Log.d(TAG, location[0] + getWidth()/2 + " " + (location[1] + getHeight()/2 - mExtraHeight));
-        view.setStartPoint(location[0] + getWidth()/2, location[1] + getHeight()/2 - mExtraHeight);
-        view.setNumber(this.mNumber);
-        view.setRadius(getWidth()/2);
-        mDecorView.addView(view,1);
+        mDragView.setLayoutParams(params);
+        mDragView.setStartPoint(x, y);
+        mDragView.setNumber(this.mNumber);
+        mDragView.setRadius(getWidth() / 2);
+        mDecorView.addView(mDragView, 1);
     }
 
     private void updateNotify(float x, float y){
-        Log.d(TAG, "x:" + x + " y:" + y);
-        DragCircleNotifyView view = (DragCircleNotifyView) mDecorView.getChildAt(1);
-        view.setCurrentPoint(x, y);
-        view.refresh();
+//        Log.d(TAG, "x:" + x + " y:" + y);
+        if(null != mDragView) {
+            mDragView.setCurrentPoint(x, y);
+            mDragView.refresh();
+        }
     }
 
     private void removeNotify(){
-        mDecorView.removeViewAt(1);
+        mDecorView.removeView(mDragView);
     }
 
+    public void setCircleNotifyCallback(ICircleNotifyCallback circleNotifyCallback){
+        this.iCircleNotifyCallback = circleNotifyCallback;
+    }
+
+    public interface ICircleNotifyCallback{
+        void onDismissByTag(int pos);
+    }
 }

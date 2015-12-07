@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.WindowManager;
@@ -30,6 +29,10 @@ public class DragCircleNotifyView extends View {
     private int mRadius = 0;
 
     private float mMaxDistance = 0;
+    /**
+     * 脱离原始距离与屏幕最小宽度3/4值的比例
+     */
+    private float mRatio = 0;
 
     public DragCircleNotifyView(Context context) {
         super(context);
@@ -100,9 +103,9 @@ public class DragCircleNotifyView extends View {
             float oldStrokeWidth = mPaint.getStrokeWidth();
             if(mStartDragX > 0 && mStartDragY > 0 && mRadius > 0){
                 float distance = getDistance(mStartDragX, mStartDragY, mCurrentX, mCurrentY);
-                float ratio = 1 - distance/(mMaxDistance*0.75f);//距离超过屏幕最小宽度的3/4就不划线
-                if(ratio > 0) {
-                    mPaint.setStrokeWidth(mRadius * ratio);
+                mRatio = 1 - distance/(mMaxDistance*0.75f);//距离超过屏幕最小宽度的3/4就不划线
+                if(mRatio > 0) {
+                    mPaint.setStrokeWidth(mRadius * mRatio);
                     canvas.drawLine(mCurrentX, mCurrentY, mStartDragX, mStartDragY, mPaint);
                 }
             }
@@ -138,6 +141,10 @@ public class DragCircleNotifyView extends View {
 
     public void setRadius(int radius){
         this.mRadius = radius;
+    }
+
+    public float getRatio(){
+        return mRatio;
     }
 
     public void refresh(){

@@ -17,19 +17,24 @@ import com.jackchan.qquidemo.ui.HeaderScrollView;
 import com.jackchan.qquidemo.ui.ScrollItemListView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
-public class ChatActivity extends ActionBarActivity {
+public class ChatActivity extends ActionBarActivity implements CircleNotifyView.ICircleNotifyCallback{
     private final static String TAG = "ChatActivity";
     private List<Item> mList = null;
     private MyAdapter mMyAdapter = null;
     private HeaderScrollView mHeaderScrollView = null;
 
+    private Set<Integer> mDismissTag = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        mDismissTag = new HashSet<Integer>();
         mList = new ArrayList<Item>();
         for(int i = 0; i < 50; i++){
             mList.add(new Item(i+""));
@@ -39,6 +44,12 @@ public class ChatActivity extends ActionBarActivity {
         mHeaderScrollView.setAdapter(mMyAdapter);
         View header = LayoutInflater.from(this).inflate(R.layout.header, null);
         mHeaderScrollView.setHeaderView(header);
+    }
+
+    @Override
+    public void onDismissByTag(int pos) {
+        mDismissTag.add(pos);
+        mMyAdapter.notifyDataSetChanged();
     }
 
     private class Item{
@@ -91,7 +102,10 @@ public class ChatActivity extends ActionBarActivity {
                 viewHolder = (ViewHolder)convertView.getTag();
             }
             viewHolder.tvName.setText(mList.get(i).name);
+            viewHolder.viewNotify.setCircleNotifyCallback(ChatActivity.this);
             viewHolder.viewNotify.setNumber(i);
+            viewHolder.viewNotify.setTag(i);
+            viewHolder.viewNotify.setVisibility(mDismissTag.contains(i)?View.GONE:View.VISIBLE);
             final View itemView = convertView;
             viewHolder.btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override
