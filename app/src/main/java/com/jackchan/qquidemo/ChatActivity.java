@@ -47,8 +47,8 @@ public class ChatActivity extends ActionBarActivity implements CircleNotifyView.
     }
 
     @Override
-    public void onDismissByTag(int pos) {
-        mDismissTag.add(pos);
+    public void onDismissByTag(String tag) {
+        mList.remove(new Item(tag));
         mMyAdapter.notifyDataSetChanged();
     }
 
@@ -58,6 +58,14 @@ public class ChatActivity extends ActionBarActivity implements CircleNotifyView.
         }
 
         String name;
+
+        @Override
+        public boolean equals(Object o) {
+            if(o instanceof Item && ((Item)o).name != null){
+                return ((Item)o).name.equals(this.name);
+            }
+            return false;
+        }
     }
 
     private class ViewHolder{
@@ -103,9 +111,9 @@ public class ChatActivity extends ActionBarActivity implements CircleNotifyView.
             }
             viewHolder.tvName.setText(mList.get(i).name);
             viewHolder.viewNotify.setCircleNotifyCallback(ChatActivity.this);
-            viewHolder.viewNotify.setNumber(i);
-            viewHolder.viewNotify.setTag(i);
-            viewHolder.viewNotify.setVisibility(mDismissTag.contains(i)?View.GONE:View.VISIBLE);
+            viewHolder.viewNotify.setNumber(Integer.valueOf(mList.get(i).name));
+            viewHolder.viewNotify.setTag(mList.get(i).name);
+            viewHolder.viewNotify.setVisibility(mDismissTag.contains(i) ? View.GONE : View.VISIBLE);
             final View itemView = convertView;
             viewHolder.btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override

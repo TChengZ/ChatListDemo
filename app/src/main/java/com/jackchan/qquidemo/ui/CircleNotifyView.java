@@ -147,7 +147,7 @@ public class CircleNotifyView extends View {
             removeNotify();
             Log.d(TAG, "getRatio:" + mDragView.getRatio());
             if(null != mDragView && mDragView.getRatio() <= 0){
-                iCircleNotifyCallback.onDismissByTag((int)this.getTag());
+                iCircleNotifyCallback.onDismissByTag((String)this.getTag());
             }
         }
         return true;
@@ -203,6 +203,6 @@ public class CircleNotifyView extends View {
     }
 
     public interface ICircleNotifyCallback{
-        void onDismissByTag(int pos);
+        void onDismissByTag(String tag);
     }
 }
