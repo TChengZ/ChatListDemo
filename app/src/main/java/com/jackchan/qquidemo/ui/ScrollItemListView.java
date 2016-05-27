@@ -95,7 +95,7 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
         if(mDisallowedIntercept){
             return false;
         }
-        if(getNeedScrollToNormal(ev)){
+        if(mNeedScrollToNormal){
             scrollToNormal(ev);
             return true;
         }
@@ -142,14 +142,16 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         int pos = this.pointToPosition(x, y - this.getTop());
-//        Log.d(TAG, "ev:" + ev.getAction() + " pos:" + pos + " mHasScrollItemPos:" + mHasScrollItemPos);
+        Log.d(TAG, "getNeedScrollToNormal ev:" + ev.getAction() + " pos:" + pos + " mHasScrollItemPos:" + mHasScrollItemPos);
         if(ev.getAction() == MotionEvent.ACTION_DOWN){
             mLastInterceptX = x;
             mLastInterceptY = y - this.getTop();
             //点击在删除按钮的部分不需要拦截
-            if(mLastScrollView != null && mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos){
-                setNeedScrollToNormal(false, -1);
-            }
+//            if(null != mLastScrollView)
+//                Log.d(TAG, "getNeedScrollToNormal mLastInterceptX:" + mLastInterceptX + " mLastScrollView.getRight():" + mLastScrollView.getRight());
+//            if(mLastScrollView != null && mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos){
+//                setNeedScrollToNormal(false, -1);
+//            }
             return false;
         }
         else if(ev.getAction() == MotionEvent.ACTION_MOVE &&
@@ -157,21 +159,26 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
                 && pos == mHasScrollItemPos){
             int delaX = x - mLastInterceptX;
             int delaY = y - mLastInterceptY;
-            if(Math.abs(delaY) < Math.abs(delaX)) {
-                setNeedScrollToNormal(false, -1);
-            }
+//            if(Math.abs(delaY) < Math.abs(delaX)) {
+//                setNeedScrollToNormal(false, -1);
+//            }
         }
+        Log.d(TAG, "getNeedScrollToNormal mNeedScrollToNormal:" + mNeedScrollToNormal);
         return mNeedScrollToNormal;
     }
 
     public void scrollToNormal(MotionEvent ev){
-        if(ev.getAction() == MotionEvent.ACTION_MOVE){
+        if(!mIsScrollingToNormal){
+            new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+            mIsScrollingToNormal = true;
+        }
+        /*if(ev.getAction() == MotionEvent.ACTION_MOVE){
             if(!mIsScrollingToNormal){
                 new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
                 mIsScrollingToNormal = true;
             }
         }
-        else if(ev.getAction() == MotionEvent.ACTION_UP){
+        else */if(ev.getAction() == MotionEvent.ACTION_UP){
             if(mNeedScrollToNormal) {
                 setNeedScrollToNormal(false, -1);
             }

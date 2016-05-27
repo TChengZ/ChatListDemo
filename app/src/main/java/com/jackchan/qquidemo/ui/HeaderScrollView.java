@@ -110,7 +110,7 @@ public class HeaderScrollView extends LinearLayout implements IPersonalScrollVie
                 }
             }
         }
-        return intercept;
+        return intercept || super.onInterceptTouchEvent(ev);
     }
 
     @Override
