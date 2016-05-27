@@ -73,18 +73,17 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
             }
         }
         else if(ev.getAction() == MotionEvent.ACTION_UP){
-            Log.d(TAG, "onInterceptTouchEvent up:" + mLastInterceptX + " " + mLastInterceptY + " " + x + " " + y);
-            if(x == mLastInterceptX && y == mLastInterceptY && mNeedScrollToNormal){ //证明是点击事件需要先将滑动的弹回原来状态
+            if(null != mLastScrollView) {
                 Log.d(TAG, "onInterceptTouchEvent up mLastInterceptX" + mLastInterceptX +
                         " mLastScrollView.getRight()" + mLastScrollView.getRight() + " pos：" + pos + " mHasScrollItemPos：" + mHasScrollItemPos);
-                if(!mIsScrollingToNormal && null != mLastScrollView && //证明不是点击在删除按钮上
-                        !(mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos)){
-                    new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
-                    mIsScrollingToNormal = true;
-                    intercept = true;
-                }
-                setNeedScrollToNormal(false, -1);
             }
+            if(!mIsScrollingToNormal && null != mLastScrollView && //证明不是点击在删除按钮上
+                    !(mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos)){
+                new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+                mIsScrollingToNormal = true;
+                intercept = true;
+            }
+            setNeedScrollToNormal(false, -1);
         }
         return intercept || super.onInterceptTouchEvent(ev);
     }
