@@ -86,10 +86,10 @@ public class HeaderScrollView extends LinearLayout implements IPersonalScrollVie
         if(mDisallowedIntercept){
             return false;
         }
-        mNeedScrollToNormal = mListView.getNeedScrollToNormal(ev);
-        if(mNeedScrollToNormal){
-            return true;
-        }
+//        mNeedScrollToNormal = mListView.getNeedScrollToNormal(ev);
+//        if(mNeedScrollToNormal){
+//            return true;
+//        }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
         boolean intercept = false;

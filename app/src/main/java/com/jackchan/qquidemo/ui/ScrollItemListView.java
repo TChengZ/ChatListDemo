@@ -52,7 +52,7 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-//        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
+        Log.d(TAG, "onInterceptTouchEvent ev:" + ev.getAction());
         if(mDisallowedIntercept){
             return false;
         }
@@ -72,14 +72,32 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
                 intercept = true;
             }
         }
-        return intercept;
+        else if(ev.getAction() == MotionEvent.ACTION_UP){
+            Log.d(TAG, "onInterceptTouchEvent up:" + mLastInterceptX + " " + mLastInterceptY + " " + x + " " + y);
+            if(x == mLastInterceptX && y == mLastInterceptY && mNeedScrollToNormal){ //证明是点击事件需要先将滑动的弹回原来状态
+                Log.d(TAG, "onInterceptTouchEvent up mLastInterceptX" + mLastInterceptX +
+                        " mLastScrollView.getRight()" + mLastScrollView.getRight() + " pos：" + pos + " mHasScrollItemPos：" + mHasScrollItemPos);
+                if(!mIsScrollingToNormal && null != mLastScrollView && //证明不是点击在删除按钮上
+                        !(mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos)){
+                    new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
+                    mIsScrollingToNormal = true;
+                    intercept = true;
+                }
+                setNeedScrollToNormal(false, -1);
+            }
+        }
+        return intercept || super.onInterceptTouchEvent(ev);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-//        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
+        Log.d(TAG, "onTouchEvent ev:" + ev.getAction());
         if(mDisallowedIntercept){
             return false;
+        }
+        if(getNeedScrollToNormal(ev)){
+            scrollToNormal(ev);
+            return true;
         }
         int x = (int) ev.getX();
         int y = (int) ev.getY();
@@ -92,6 +110,8 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
             int deltaX = x - mLastInterceptX;
             int deltaY = y - mLastInterceptY;
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                Log.d(TAG, "action move mDownPos = " + pos);
+                mDownPos = pos;
                 dragItem(x, pos);
                 return true;
             }
@@ -172,6 +192,7 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
             }
             if(null != mScrollView) {
                 MarginLayoutParams params = (MarginLayoutParams)mScrollView.getLayoutParams();
+                //将宽度从WRAP_CONTENT改为固定值
                 params.width = mScrollView.getWidth();
                 mDownLeftMargin = params.leftMargin;
             }
