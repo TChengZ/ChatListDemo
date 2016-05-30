@@ -68,7 +68,7 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
         else if(ev.getAction() == MotionEvent.ACTION_MOVE){
             int deltaX = x - mLastInterceptX;
             int deltaY = y - mLastInterceptY;
-            if(Math.abs(deltaX) > Math.abs(deltaY)){
+            if(Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10){ //Math.abs(deltaX) > 10用于防止抖动
                 intercept = true;
             }
         }
@@ -77,7 +77,7 @@ public class ScrollItemListView extends ListView implements IPersonalScrollView{
                 Log.d(TAG, "onInterceptTouchEvent up mLastInterceptX" + mLastInterceptX +
                         " mLastScrollView.getRight()" + mLastScrollView.getRight() + " pos：" + pos + " mHasScrollItemPos：" + mHasScrollItemPos);
             }
-            if(!mIsScrollingToNormal && null != mLastScrollView && //证明不是点击在删除按钮上
+            if(mNeedScrollToNormal && !mIsScrollingToNormal && null != mLastScrollView && //证明不是点击在删除按钮上
                     !(mLastInterceptX > mLastScrollView.getRight() && pos == mHasScrollItemPos)){
                 new ScrollToEndTask(mLastScrollView, ScrollToEndTask.SCROLL_RIGHT).execute();
                 mIsScrollingToNormal = true;

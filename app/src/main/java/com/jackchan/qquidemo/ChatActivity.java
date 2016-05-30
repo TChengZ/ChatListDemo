@@ -104,6 +104,12 @@ public class ChatActivity extends ActionBarActivity implements CircleNotifyView.
                 viewHolder.viewNotify = (CircleNotifyView) convertView.findViewById(R.id.notify_view);
                 viewHolder.rlName.setTag(ScrollItemListView.NOR_DELETE_TAG);
                 viewHolder.btnDelete.setTag(ScrollItemListView.DELETE_TAG);
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(ChatActivity.this, "onClick", Toast.LENGTH_LONG).show();
+                    }
+                });
                 convertView.setTag(viewHolder);
             }
             else{
